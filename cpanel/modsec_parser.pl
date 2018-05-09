@@ -27,7 +27,7 @@ sub user_interface {
         print "Client IP: 2\n";
         print "Hostname: 3\n";
         print "URI: 4\n";
-        print "Rule ID: 5\n";
+        print "Rule ID: 5\n\n";
         print "Exit: 0\n\n";
         
         # getting the input
@@ -113,8 +113,21 @@ sub user_interface {
                 print "Invalid URI pattern, going back\n\n";
             }
             
-        } elsif ($input == 5) { # parse by uri
-            parse_by_id();
+        } elsif ($input == 5) { # parse by id
+            print "Parsing by Rule ID.\n";
+            print "Enter a valid ID like 12345\n";
+            $input = &get_user_input;
+            
+            # checking input and doing
+            if ($input =~ m/^\d{2,}$/){
+                @modsec_entries = parse_by_id(\@modsec_entries, $input);
+                print_entries(\@modsec_entries);
+            } elsif ($input == 0) { # exit
+                print "Going back\n\n";
+            } else {
+                print "Invalid ID pattern, going back\n\n";
+            }
+            
         } elsif ($input == 0) { # exit
             print "Bai\n";
             exit;
@@ -197,7 +210,17 @@ sub parse_by_uri {
     return @parsed_entries
 }
 
-sub parse_by_id {}
+sub parse_by_id {
+    my $modsec_entries = shift;
+    my $id = shift;
+    my @parsed_entries;
+    for (@{$modsec_entries}) {
+        if (defined($_->{id}) && $_->{id} eq $id) {
+            push @parsed_entries, $_;
+        }
+    }
+    return @parsed_entries
+}
 
 sub get_log_location {
     if ($#ARGV != -1) {
