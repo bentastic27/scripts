@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use File::Slurp;
 use POSIX qw(strftime);
+use List::MoreUtils qw(uniq);
 
 # the perl equivalent of "if __name__ == '__main__'"
 unless (caller){
@@ -28,17 +29,21 @@ sub user_interface {
         print "Hostname: 3\n";
         print "URI: 4\n";
         print "Rule ID: 5\n\n";
+        
+        print "Other options\n";
+        print "Summary: 7\n";
+        print "Generate Whitelist: 8\n";
         print "Exit: 0\n\n";
         
         # getting the input
         my $input = &get_user_input;
         
-        if ($input == 1){ # parse by date
+        if ($input eq "1"){ # parse by date
             print "Parsing by date\n";
             print "By today: 1\nEnter date: 2\nGo back: 0\n\n";
             $input = &get_user_input;
             
-            if ($input == 1) { # by today
+            if ($input eq "1") { # by today
                 my $year = strftime "%Y", localtime;
                 my $dom = strftime "%d", localtime;
                 my $month = strftime "%b", localtime;
@@ -46,7 +51,7 @@ sub user_interface {
                 @modsec_entries = parse_by_date(\@modsec_entries, $dom, $month, $year);
                 print_entries(\@modsec_entries);
                 
-            } elsif ($input == 2) { # enter date
+            } elsif ($input eq "2") { # enter date
                 print "Enter date in YYYY-MMM-DD format.\n";
                 print "Example: 2018-Mar-08\n\n";
                 $input = &get_user_input;
@@ -61,13 +66,13 @@ sub user_interface {
                     print "Invalid date pattern, going back\n\n";
                 }
                 
-            } elsif ($input == 0) { # exit
+            } elsif ($input eq "0") { # exit
                 print "Going back\n\n";
             } else { # invalid
                 print "Invalid option, going back\n\n"
             }
         
-        } elsif ($input == 2) { # parse by client
+        } elsif ($input eq "2") { # parse by client
             print "Parsing by client IP address.\n";
             print "Enter IP address like 123.123.123.123.\n";
             $input = &get_user_input;
@@ -82,7 +87,7 @@ sub user_interface {
                 print "Invalid IP address pattern, going back\n\n";
             }
             
-        } elsif ($input == 3) { # parse by hostname
+        } elsif ($input eq "3") { # parse by hostname
             print "Parsing by hostname.\n";
             print "Enter valid FQDN or IP address.\n";
             print "Example: whatever.com or 123.123.123.123\n";
@@ -98,7 +103,7 @@ sub user_interface {
                 print "Invalid IP or FQDN pattern, going back\n\n";
             }
             
-        } elsif ($input == 4) { # parse by uri
+        } elsif ($input eq "4") { # parse by uri
             print "Parsing by URI.\n";
             print "Enter valid URI like /wp-admin/ or /index.php or even /\n";
             $input = &get_user_input;
@@ -113,7 +118,7 @@ sub user_interface {
                 print "Invalid URI pattern, going back\n\n";
             }
             
-        } elsif ($input == 5) { # parse by id
+        } elsif ($input eq "5") { # parse by id
             print "Parsing by Rule ID.\n";
             print "Enter a valid ID like 12345\n";
             $input = &get_user_input;
@@ -122,13 +127,40 @@ sub user_interface {
             if ($input =~ m/^\d{2,}$/){
                 @modsec_entries = parse_by_id(\@modsec_entries, $input);
                 print_entries(\@modsec_entries);
-            } elsif ($input == 0) { # exit
+            } elsif ($input eq "0") { # exit
                 print "Going back\n\n";
             } else {
                 print "Invalid ID pattern, going back\n\n";
             }
+        
+        } elsif ($input eq "7") { # summary
+                               
+        } elsif ($input eq "8") { # generate whitelist
+            print "Generating whitelist.\n";
+            my $whitelist_string = gen_whitelist(\@modsec_entries);
             
-        } elsif ($input == 0) { # exit
+            print "Show whitelist: 1\n";
+            print "Write to file: /path/to/file.txt\n";
+            print "(Protip: writing to an existing file overwrites it)\n\n";
+            $input = &get_user_input;
+            
+            if ($input eq "1") {
+                print "\n$whitelist_string\n";
+            } elsif ($input eq "0") {
+                print "Going back\n\n";
+            } elsif (-f $input) {
+                print "File already exists, overwrite? [y/n]\n";
+                print "Cannot be undone!\n";
+                if (&get_user_input eq "y"){
+                    write_file($input, $whitelist_string);
+                    print "Wrote whitelist to $input\n\n";
+                }   
+            } else {
+                write_file($input, $whitelist_string);
+                print "Wrote whitelist to $input\n\n";
+            }
+            
+        } elsif ($input eq "0") { # exit
             print "Bai\n";
             exit;
         } else { # invalid
@@ -153,6 +185,49 @@ sub print_entries {
     }
     print "\nCurrent total: " . @{$entries} . "\n";
     print "\n";
+}
+
+sub show_summary {
+    my $modsec_entries = shift;
+}
+
+sub gen_whitelist {
+    my $modsec_entries = shift;
+    
+    # get list of unique URIs
+    my @unique_uris;
+    for (@{$modsec_entries}) {
+        push @unique_uris, $_->{uri} if (defined($_->{uri}));
+    }
+    @unique_uris = uniq @unique_uris;
+    
+    # generate list of hashes that contain the uri IDs
+    my @whitelist_data;
+    for my $uri (@unique_uris) {
+        my @id_list = ();
+        for my $entry (@{$modsec_entries}) {
+            if (defined($entry->{uri}) && $entry->{uri} eq $uri) {
+                push @id_list, $entry->{id};
+            }
+        }
+        push @whitelist_data, {
+            uri => $uri,
+            ids => [@id_list]
+        };
+    }
+    
+    # generating the actual whitelist
+    my $whitelist_string;
+    for my $entry (@whitelist_data) {
+        $whitelist_string .= "<LocationMatch \"$entry->{uri}\">\n";
+        $whitelist_string .= "  SecRuleRemoveById";
+        for my $rule_id (@{$entry->{ids}}) {
+            $whitelist_string .= " " . $rule_id;
+        }
+        $whitelist_string .= "\n</LocationMatch>\n";
+    }
+    
+    return $whitelist_string;
 }
 
 sub parse_by_date {
