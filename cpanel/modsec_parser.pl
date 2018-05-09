@@ -1,5 +1,4 @@
-#!/usr/bin/perl
-# change to /usr/local/cpanel/3rdparty/bin/perl on release
+#!/usr/local/cpanel/3rdparty/bin/perl
 
 use strict;
 use warnings;
