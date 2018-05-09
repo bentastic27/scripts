@@ -66,8 +66,20 @@ sub user_interface {
             } else { # invalid
                 print "Invalid option, going back\n\n"
             }
+        
         } elsif ($input == 2) { # parse by client
-            parse_by_client();
+            print "Parsing by client IP address.\n";
+            print "Enter IP address like 123.123.123.123\n";
+            $input = &get_user_input;
+            
+            # checking input and doing
+            if ($input =~ m/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
+                @modsec_entries = parse_by_client(\@modsec_entries, $input);
+                print_entries(\@modsec_entries);
+            } else {
+                print "Invalid IP address pattern, going back\n\n";
+            }
+            
         } elsif ($input == 3) { # parse by hostname
             parse_by_hostname();
         } elsif ($input == 4) { # parse by uri
@@ -120,7 +132,17 @@ sub parse_by_date {
     return @parsed_entries;
 }
 
-sub parse_by_client {}
+sub parse_by_client {
+    my $modsec_entries = shift;
+    my $client_ip = shift;
+    my @parsed_entries;
+    for (@{$modsec_entries}) {
+        if (defined($_->{client}) && $_->{client} eq $client_ip) {
+            push @parsed_entries, $_;
+        }
+    }
+    return @parsed_entries;
+}
 
 sub parse_by_hostname {}
 
