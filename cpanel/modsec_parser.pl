@@ -69,21 +69,50 @@ sub user_interface {
         
         } elsif ($input == 2) { # parse by client
             print "Parsing by client IP address.\n";
-            print "Enter IP address like 123.123.123.123\n";
+            print "Enter IP address like 123.123.123.123.\n";
             $input = &get_user_input;
             
             # checking input and doing
-            if ($input =~ m/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
+            if ($input =~ m/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
                 @modsec_entries = parse_by_client(\@modsec_entries, $input);
                 print_entries(\@modsec_entries);
+            } elsif ($input == 0) { # exit
+                print "Going back\n\n";
             } else {
                 print "Invalid IP address pattern, going back\n\n";
             }
             
         } elsif ($input == 3) { # parse by hostname
-            parse_by_hostname();
+            print "Parsing by hostname.\n";
+            print "Enter valid FQDN or IP address.\n";
+            print "Example: whatever.com or 123.123.123.123\n";
+            $input = &get_user_input;
+            
+            # checking input and doing
+            if ($input =~ m/^[a-zA-Z0-9\.\-\_]+\.[a-zA-Z0-9]+$/) {
+                @modsec_entries = parse_by_hostname(\@modsec_entries, $input);
+                print_entries(\@modsec_entries);
+            } elsif ($input == 0) { # exit
+                print "Going back\n\n";
+            } else {
+                print "Invalid IP or FQDN pattern, going back\n\n";
+            }
+            
         } elsif ($input == 4) { # parse by uri
-            parse_by_uri();
+            print "Parsing by URI.\n";
+            print "Enter valid URI like /wp-admin/ or /index.php or even /\n";
+            $input = &get_user_input;
+            
+            # checking input and doing
+            if ($input =~ m/^\/[a-zA-Z0-9\.\/\\\-]*$/){
+                @modsec_entries = parse_by_uri(\@modsec_entries, $input);
+                print_entries(\@modsec_entries);
+            } elsif ($input == 0) { # exit
+                print "Going back\n\n";
+            } else {
+                print "Invalid URI pattern, going back\n\n";
+            }
+            
         } elsif ($input == 5) { # parse by uri
             parse_by_id();
         } elsif ($input == 0) { # exit
@@ -107,7 +136,7 @@ sub print_entries {
     my $entries = shift;
     print "Current entries:\n";
     for (@{$entries}) {
-        print "id $_->{id} // client $_->{client} // uri $_->{uri}\n";
+        print " id $_->{id} // client $_->{client} // hostname $_->{hostname} // uri $_->{uri}\n";
     }
     print "\nCurrent total: " . @{$entries} . "\n";
     print "\n";
@@ -144,9 +173,29 @@ sub parse_by_client {
     return @parsed_entries;
 }
 
-sub parse_by_hostname {}
+sub parse_by_hostname {
+    my $modsec_entries = shift;
+    my $hostname = shift;
+    my @parsed_entries;
+    for (@{$modsec_entries}) {
+        if (defined($_->{hostname}) && $_->{hostname} =~ m/$hostname$/) {
+            push @parsed_entries, $_;
+        }
+    }
+    return @parsed_entries
+}
 
-sub parse_by_uri {}
+sub parse_by_uri {
+    my $modsec_entries = shift;
+    my $uri = shift;
+    my @parsed_entries;
+    for (@{$modsec_entries}) {
+        if (defined($_->{uri}) && $_->{uri} eq $uri) {
+            push @parsed_entries, $_;
+        }
+    }
+    return @parsed_entries
+}
 
 sub parse_by_id {}
 
