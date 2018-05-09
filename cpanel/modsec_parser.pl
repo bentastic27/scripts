@@ -31,7 +31,7 @@ sub user_interface {
         print "Rule ID: 5\n\n";
         
         print "Other options\n";
-        print "Summary: 7\n";
+        #print "Summary: 7\n";
         print "Generate Whitelist: 8\n";
         print "Exit: 0\n\n";
         
@@ -134,6 +134,7 @@ sub user_interface {
             }
         
         } elsif ($input eq "7") { # summary
+            print_summary(\@modsec_entries);
                                
         } elsif ($input eq "8") { # generate whitelist
             print "Generating whitelist.\n";
@@ -187,8 +188,27 @@ sub print_entries {
     print "\n";
 }
 
-sub show_summary {
+sub print_summary {
     my $modsec_entries = shift;
+    
+    # client array, unique client array, and client counts
+    my @clients;
+    for (@{$modsec_entries}) {
+        push @clients, $_->{client} if (defined($_->{client}));
+    }
+    my @unique_clients = uniq @clients;
+    my @client_counts;
+    for my $client (@unique_clients) {
+        my $count = 0;
+        for (@clients) {
+            $count += 1 if $client eq $_;
+        }
+        push @client_counts, {client => $client, count => $count};
+    }
+    
+    print "Client data\n";
+    print "Unique clients: ". @unique_clients . " \n";
+    print "\n";
 }
 
 sub gen_whitelist {
