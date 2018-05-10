@@ -12,7 +12,7 @@ unless (caller){
 }
 
 sub user_interface {
-    print "ModSecurity parser by Ben Healey\n\n";
+    print "### ModSecurity Parser by Ben Healey ###\n\n";
     
     # get the modsec entries
     my @modsec_entries = get_modsec_entries(&get_log_location);
@@ -21,6 +21,7 @@ sub user_interface {
     # while $exit != 1, run
     my $exit = 0;
     while ($exit != 1) {
+        print "### Main Menu ###\n\n";
         # menu options
         print "Parse by...\n";
         print "Date: 1\n";
@@ -31,14 +32,14 @@ sub user_interface {
         
         print "Other options\n";
         print "Summary: 7\n";
-        print "Generate Whitelist: 8\n";
+        print "Generate whitelist: 8\n";
         print "Exit: 0\n\n";
         
         # getting the input
         my $input = &get_user_input;
         
         if ($input eq "1"){ # parse by date
-            print "Parsing by date\n";
+            print "### Parsing by Date ###\n\n";
             print "By today: 1\nEnter date: 2\nGo back: 0\n\n";
             $input = &get_user_input;
             
@@ -61,6 +62,9 @@ sub user_interface {
                     @modsec_entries = parse_by_date(\@modsec_entries, $dom, $month, $year);
                     print_entries(\@modsec_entries);
                 
+                } elsif ($input eq "0") { # exit
+                    print "Going back\n\n";
+                
                 } else { # invalid input
                     print "Invalid date pattern, going back\n\n";
                 }
@@ -72,7 +76,7 @@ sub user_interface {
             }
         
         } elsif ($input eq "2") { # parse by client
-            print "Parsing by client IP address.\n";
+            print "### Parsing by Client IP Address ###\n\n";
             print "Enter IP address like 123.123.123.123.\n";
             $input = &get_user_input;
             
@@ -80,14 +84,14 @@ sub user_interface {
             if ($input =~ m/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
                 @modsec_entries = parse_by_client(\@modsec_entries, $input);
                 print_entries(\@modsec_entries);
-            } elsif ($input == 0) { # exit
+            } elsif ($input eq "0") { # exit
                 print "Going back\n\n";
             } else {
                 print "Invalid IP address pattern, going back\n\n";
             }
             
         } elsif ($input eq "3") { # parse by hostname
-            print "Parsing by hostname.\n";
+            print "### Parsing by Hostname ###\n\n";
             print "Enter valid FQDN or IP address.\n";
             print "Example: whatever.com or 123.123.123.123\n";
             $input = &get_user_input;
@@ -96,14 +100,14 @@ sub user_interface {
             if ($input =~ m/^[a-zA-Z0-9\.\-\_]+\.[a-zA-Z0-9]+$/) {
                 @modsec_entries = parse_by_hostname(\@modsec_entries, $input);
                 print_entries(\@modsec_entries);
-            } elsif ($input == 0) { # exit
+            } elsif ($input eq "0") { # exit
                 print "Going back\n\n";
             } else {
                 print "Invalid IP or FQDN pattern, going back\n\n";
             }
             
         } elsif ($input eq "4") { # parse by uri
-            print "Parsing by URI.\n";
+            print "### Parsing by URI ###\n\n";
             print "Enter valid URI like /wp-admin/ or /index.php or even /\n";
             $input = &get_user_input;
             
@@ -111,14 +115,14 @@ sub user_interface {
             if ($input =~ m/^\/[a-zA-Z0-9\.\/\\\-]*$/){
                 @modsec_entries = parse_by_uri(\@modsec_entries, $input);
                 print_entries(\@modsec_entries);
-            } elsif ($input == 0) { # exit
+            } elsif ($input eq "0") { # exit
                 print "Going back\n\n";
             } else {
                 print "Invalid URI pattern, going back\n\n";
             }
             
         } elsif ($input eq "5") { # parse by id
-            print "Parsing by Rule ID.\n";
+            print "### Parsing by Rule ID ###\n\n";
             print "Enter a valid ID like 12345\n";
             $input = &get_user_input;
             
@@ -136,7 +140,7 @@ sub user_interface {
             print_summary(\@modsec_entries);
                                
         } elsif ($input eq "8") { # generate whitelist
-            print "Generating whitelist.\n";
+            print "### Generating whitelist ###\n\n";
             my $whitelist_string = gen_whitelist(\@modsec_entries);
             
             print "Show whitelist: 1\n";
@@ -179,7 +183,7 @@ sub get_user_input {
 
 sub print_entries {
     my $entries = shift;
-    print "Current entries:\n";
+    print "### Current Entries ###\n\n";
     for (@{$entries}) {
         print " id $_->{id} // client $_->{client} // hostname $_->{hostname} // uri $_->{uri}\n";
     }
