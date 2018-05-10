@@ -16,6 +16,7 @@ sub user_interface {
     
     # get the modsec entries
     my @modsec_entries = get_modsec_entries(&get_log_location);
+    my @backup_entries = @modsec_entries;
     print "Total ModSec errors: " . ($#modsec_entries + 1) . "\n\n";
     
     # while $exit != 1, run
@@ -33,6 +34,7 @@ sub user_interface {
         print "Other options\n";
         print "Summary: 7\n";
         print "Generate whitelist: 8\n";
+        print "Reset: 9\n";
         print "Exit: 0\n\n";
         
         # getting the input
@@ -163,6 +165,9 @@ sub user_interface {
                 write_file($input, $whitelist_string);
                 print "Wrote whitelist to $input\n\n";
             }
+        } elsif ($input eq "9") {
+            print "### Reset List ###\n\n";
+            @modsec_entries = @backup_entries;
             
         } elsif ($input eq "0") { # exit
             print "Bai\n";
