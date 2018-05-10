@@ -30,7 +30,7 @@ sub user_interface {
         print "Rule ID: 5\n\n";
         
         print "Other options\n";
-        #print "Summary: 7\n";
+        print "Summary: 7\n";
         print "Generate Whitelist: 8\n";
         print "Exit: 0\n\n";
         
@@ -205,8 +205,61 @@ sub print_summary {
         push @client_counts, {client => $client, count => $count};
     }
     
-    print "Client data\n";
-    print "Unique clients: ". @unique_clients . " \n";
+    # sort those while we're at it
+    @client_counts = sort { $b->{count} <=> $a->{count} } @client_counts;
+    
+    print "### Client Data ###\n\n";
+    print "Unique clients: ". @unique_clients . " \n\n";
+    print "Highest 10:\n";
+    print "$client_counts[$_]->{client}: $client_counts[$_]->{count}\n" for (0..9);
+    print "\n";
+    
+    # hostname array, unique hostname array, and hostname counts
+    my @hostnames;
+    for (@{$modsec_entries}) {
+        push @hostnames, $_->{hostname} if (defined($_->{hostname}));
+    }
+    my @unique_hostnames = uniq @hostnames;
+    my @hostname_counts;
+    for my $hostname (@unique_hostnames) {
+        my $count = 0;
+        for (@hostnames) {
+            $count += 1 if $hostname eq $_;
+        }
+        push @hostname_counts, {hostname => $hostname, count => $count};
+    }
+    
+    # sort those while we're at it
+    @hostname_counts = sort { $b->{count} <=> $a->{count} } @hostname_counts;
+    
+    print "### Hostname Data ###\n\n";
+    print "Unique hostnames: ". @unique_hostnames . " \n\n";
+    print "Highest 10:\n";
+    print "$hostname_counts[$_]->{hostname}: $hostname_counts[$_]->{count}\n" for (0..9);
+    print "\n";
+    
+    # hostname array, unique hostname array, and hostname counts
+    my @uris;
+    for (@{$modsec_entries}) {
+        push @uris, $_->{uri} if (defined($_->{uri}));
+    }
+    my @unique_uris = uniq @uris;
+    my @uri_counts;
+    for my $uri (@unique_uris) {
+        my $count = 0;
+        for (@uris) {
+            $count += 1 if $uri eq $_;
+        }
+        push @uri_counts, {uri => $uri, count => $count};
+    }
+    
+    # sort those while we're at it
+    @uri_counts = sort { $b->{count} <=> $a->{count} } @uri_counts;
+    
+    print "### URI Data ###\n\n";
+    print "Unique uris: ". @unique_uris . " \n\n";
+    print "Highest 10:\n";
+    print "$uri_counts[$_]->{uri}: $uri_counts[$_]->{count}\n" for (0..9);
     print "\n";
 }
 
