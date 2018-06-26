@@ -291,6 +291,7 @@ sub gen_whitelist {
                 push @id_list, $entry->{id};
             }
         }
+	@id_list = uniq @id_list;
         push @whitelist_data, {
             uri => $uri,
             ids => [@id_list]
