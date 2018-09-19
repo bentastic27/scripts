@@ -14,7 +14,7 @@ def main():
         print("Example:")
         print(os.path.basename(__file__) + " amd64")
         exit()
-    
+
     # generate the stats dictionary
     stats = get_stats(download_contents_file(sys.argv[1]))
 
@@ -36,7 +36,7 @@ def download_contents_file(arch):
     except urllib.error.HTTPError:
         print("Probably invalid arch: try again")
         exit()
-    
+
     # gunzip, decode, and split by lines to return line list
     return gzip.decompress(response.read()).decode("utf-8").split("\n")
 
@@ -55,7 +55,7 @@ def get_stats(file_content):
                     stats[package] += 1
                 else:
                     stats[package] = 1
-    
+
     return stats
 
 
